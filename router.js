@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const router = express.Router();
 const crawler = require('./crawler');
+const rm = require('rimraf')
 
 /**
  * crawlingStatus: {
@@ -45,6 +46,21 @@ const getStatus = (className, topicNames) => {
 
 }
 
+const checkComplete = (className, topicNames) => {
+    let rs;
+    topicNames.forEach(tp => {
+        if(!fs.existsSync(path.join(dataPath, `/${className}/`, `/${tp}/`))){
+            return;
+        }
+        rs = fs.readdirSync(path.join(dataPath, `/${className}/`, `/${tp}/`));
+        if(rs.length < 4){
+            rm(path.join(dataPath, `/${className}/`, `/${tp}/`), ()=>{})
+        }
+    })
+
+    
+}
+
 // 输入： 课程，主题列表 => 状态
 router.post('/crawl-status', (req, res) => {
     const { body } = req;
@@ -79,7 +95,7 @@ router.post('/crawl', async (req, res) => {
         catch(e){
             console.log('error:', e)
         }
-        
+        checkComplete(className, topicNames)
         delete crawlingStatus[className];
         
     } else if (status.status === 'NOT_EXIST'){
@@ -100,7 +116,7 @@ router.post('/crawl', async (req, res) => {
         catch(e){
             console.log('error: ', e)
         }
-
+        checkComplete(className, topicNames)
         delete crawlingStatus[className];
 
     }
